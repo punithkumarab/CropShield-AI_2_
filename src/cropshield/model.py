@@ -111,7 +111,13 @@ class TFLiteModel:
 def load_tflite_model(path: str | Path = TFLITE_MODEL_PATH) -> TFLiteModel | None:
     model_path = Path(path)
     if not model_path.exists():
-        return None
+        from .config import MODELS_DIR, ROOT_DIR
+        for candidate in (MODELS_DIR / model_path.name, ROOT_DIR / model_path.name, ROOT_DIR / "models" / model_path.name):
+            if candidate.exists():
+                model_path = candidate
+                break
+        else:
+            return None
     interpreter = tf.lite.Interpreter(model_path=str(model_path))
     return TFLiteModel(interpreter)
 
@@ -184,7 +190,13 @@ def save_model(model: tf.keras.Model, path: str | Path = MODEL_PATH) -> None:
 def load_model(path: str | Path = MODEL_PATH) -> tf.keras.Model | None:
     model_path = Path(path)
     if not model_path.exists():
-        return None
+        from .config import MODELS_DIR, ROOT_DIR
+        for candidate in (MODELS_DIR / model_path.name, ROOT_DIR / model_path.name, ROOT_DIR / "models" / model_path.name):
+            if candidate.exists():
+                model_path = candidate
+                break
+        else:
+            return None
     try:
         with _KERAS_MODEL_LOAD_LOCK:
             return tf.keras.models.load_model(model_path)

@@ -96,12 +96,13 @@ def get_dataset_summary() -> dict:
     return summarize_dataset()
 
 
-def _safe_page_link(page_path: str, label: str, icon: str) -> None:
+def _safe_page_link(page_path: str, label: str, icon: str, in_sidebar: bool = True) -> None:
     """Safely render page link without failing if not yet indexed by Streamlit."""
+    target = st.sidebar if in_sidebar else st
     try:
-        st.sidebar.page_link(page_path, label=label, icon=icon)
+        target.page_link(page_path, label=label, icon=icon)
     except Exception:
-        st.sidebar.markdown(f"**{icon}** {label}")
+        target.markdown(f"**{icon}** {label}")
 
 
 def _render_sidebar_navigation() -> None:
@@ -323,19 +324,19 @@ ql1, ql2, ql3 = st.columns(3)
 with ql1:
     render_card_start("Single Specimen Scanner", "Precision", "emerald")
     st.markdown("Upload or capture single leaf images for sub-second pathogen diagnosis with Grad-CAM visual attention heatmaps.")
-    st.page_link("pages/2_AI_Crop_Scanner.py", label="Open AI Crop Scanner →", icon="🔬")
+    _safe_page_link("pages/2_AI_Crop_Scanner.py", label="Open AI Crop Scanner →", icon="🔬", in_sidebar=False)
     render_card_end()
 
 with ql2:
     render_card_start("Batch Surveillance", "High-Throughput", "forest")
     st.markdown("Process up to 20 field leaf captures sequentially with memory-safe queuing, pathology breakdown, and CSV telemetry.")
-    st.page_link("pages/3_Batch_Image_Analysis.py", label="Open Batch Analysis →", icon="📦")
+    _safe_page_link("pages/3_Batch_Image_Analysis.py", label="Open Batch Analysis →", icon="📦", in_sidebar=False)
     render_card_end()
 
 with ql3:
     render_card_start("Live Micro-Climate", "Epidemiology", "amber")
     st.markdown("Real-time ambient temperature, humidity, and leaf-wetness pathogen risk indexing from zero-key Open-Meteo telemetry.")
-    st.page_link("pages/12_Weather_and_Field_Insights.py", label="Open Weather Insights →", icon="🌦️")
+    _safe_page_link("pages/12_Weather_and_Field_Insights.py", label="Open Weather Insights →", icon="🌦️", in_sidebar=False)
     render_card_end()
 
 # What-If Simulator on Home Dashboard
