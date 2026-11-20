@@ -26,3 +26,7 @@ models/*.keras
 !models/crop_model.keras
 artifacts/*_training_history.csv
 artifacts/dataset_split.csv
+
+.keras/
+src/.keras/
+.streamlit/credentials.toml

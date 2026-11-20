@@ -6,9 +6,9 @@ from typing import Any, Dict
 
 import numpy as np
 from PIL import Image
-import tensorflow as tf
 
 from .config import DEFAULT_IMAGE_SIZE, LABELS_PATH, MODEL_PATH
+import tensorflow as tf
 from .model import load_labels, load_model
 from .preprocessing import ensure_finite_probabilities, preprocess_for_model, validate_upload
 

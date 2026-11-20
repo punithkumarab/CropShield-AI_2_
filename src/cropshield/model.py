@@ -8,11 +8,12 @@ import threading
 from typing import Dict, Tuple
 
 import numpy as np
+
+from .config import DEFAULT_IMAGE_SIZE, DEFAULT_LEARNING_RATE, LABELS_PATH, MODEL_PATH, TFLITE_MODEL_PATH
+
 import tensorflow as tf
 from tensorflow.keras import layers
 from tensorflow.keras.applications import MobileNetV2
-
-from .config import DEFAULT_IMAGE_SIZE, DEFAULT_LEARNING_RATE, LABELS_PATH, MODEL_PATH, TFLITE_MODEL_PATH
 
 LOGGER = logging.getLogger(__name__)
 _KERAS_MODEL_LOAD_LOCK = threading.Lock()

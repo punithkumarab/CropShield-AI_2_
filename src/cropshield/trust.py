@@ -21,6 +21,12 @@ DEFAULT_THRESHOLDS = {
 
 def load_trust_thresholds(path: str | Path = DETECTION_THRESHOLDS_PATH) -> dict[str, float]:
     source = Path(path)
+    if not source.exists():
+        if source != DETECTION_THRESHOLDS_PATH:
+            raise FileNotFoundError(f"Detection thresholds file not found: {source}")
+        source.parent.mkdir(parents=True, exist_ok=True)
+        default_document = {"schema_version": 1, **DEFAULT_THRESHOLDS}
+        source.write_text(json.dumps(default_document, indent=2), encoding="utf-8")
     with source.open("r", encoding="utf-8") as file_handle:
         document = json.load(file_handle)
     if not isinstance(document, dict) or document.get("schema_version") != 1:

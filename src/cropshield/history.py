@@ -12,9 +12,8 @@ from uuid import uuid4
 
 from PIL import Image
 
-from .config import PLANT_TIMELINE_IMAGES_DIR, ROOT_DIR
+from .config import DB_PATH, PLANT_TIMELINE_IMAGES_DIR, ROOT_DIR
 
-DB_PATH = ROOT_DIR / "crop_history.db"
 LOGGER = logging.getLogger(__name__)
 
 
@@ -110,6 +109,62 @@ def _connect() -> sqlite3.Connection:
         )
         """
     )
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS farms (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL UNIQUE,
+            location TEXT NOT NULL DEFAULT '',
+            total_acres REAL NOT NULL DEFAULT 1.0,
+            primary_crop TEXT NOT NULL DEFAULT 'Tomato',
+            created_at TEXT NOT NULL
+        )
+        """
+    )
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS plots (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            farm_id INTEGER REFERENCES farms(id) ON DELETE CASCADE,
+            name TEXT NOT NULL,
+            crop_variety TEXT NOT NULL DEFAULT '',
+            planting_date TEXT NOT NULL DEFAULT '',
+            soil_type TEXT NOT NULL DEFAULT '',
+            irrigation_type TEXT NOT NULL DEFAULT '',
+            health_status TEXT NOT NULL DEFAULT 'Healthy',
+            latitude REAL,
+            longitude REAL,
+            created_at TEXT NOT NULL
+        )
+        """
+    )
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS batch_scans (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            batch_name TEXT NOT NULL,
+            total_images INTEGER NOT NULL,
+            healthy_count INTEGER NOT NULL,
+            diseased_count INTEGER NOT NULL,
+            results_json TEXT NOT NULL,
+            created_at TEXT NOT NULL
+        )
+        """
+    )
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS expert_reviews (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            prediction_id INTEGER,
+            plant_id INTEGER,
+            agronomist_name TEXT NOT NULL,
+            status TEXT NOT NULL DEFAULT 'Pending',
+            expert_notes TEXT NOT NULL,
+            recommended_action TEXT NOT NULL DEFAULT '',
+            created_at TEXT NOT NULL
+        )
+        """
+    )
     return conn
 
 
@@ -164,7 +219,7 @@ def fetch_history(limit: int = 20) -> List[Dict[str, Any]]:
     with closing(_connect()) as conn:
         rows = conn.execute(
             """
-            SELECT timestamp, predicted_class, model_version, confidence, top_predictions,
+            SELECT id, timestamp, predicted_class, model_version, confidence, top_predictions,
                    trust_level, inference_ms, image_quality, user_notes, image_name, language
             FROM predictions ORDER BY id DESC LIMIT ?
             """,
@@ -172,9 +227,13 @@ def fetch_history(limit: int = 20) -> List[Dict[str, Any]]:
         ).fetchall()
     result = [dict(row) for row in rows]
     for row in result:
-        row["top_predictions"] = json.loads(row["top_predictions"]) if row["top_predictions"] else []
-        row["image_quality"] = json.loads(row["image_quality"]) if row["image_quality"] else {}
+        row["prediction"] = row.get("predicted_class", "")
+        row["top_predictions"] = json.loads(row["top_predictions"]) if row.get("top_predictions") else []
+        row["image_quality"] = json.loads(row["image_quality"]) if row.get("image_quality") else {}
     return result
+
+
+fetch_all_predictions = fetch_history
 
 
 def clear_history() -> None:
@@ -478,3 +537,190 @@ def delete_tracked_plant(plant_id: int) -> int:
                 except FileNotFoundError:
                     LOGGER.warning("Timeline image %s was already missing during deletion.", filename)
     return deleted
+
+
+# -------------------------------------------------------------------------
+# Farm & Plot Management
+# -------------------------------------------------------------------------
+
+def create_farm(name: str, location: str = "", total_acres: float = 1.0, primary_crop: str = "Tomato") -> int:
+    clean_name = name.strip()
+    if not clean_name:
+        raise ValueError("Farm name cannot be empty.")
+    now = datetime.now(timezone.utc).isoformat()
+    with closing(_connect()) as conn:
+        with conn:
+            cursor = conn.execute(
+                """
+                INSERT INTO farms (name, location, total_acres, primary_crop, created_at)
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                (clean_name, location.strip(), max(0.1, float(total_acres)), primary_crop.strip(), now),
+            )
+            return int(cursor.lastrowid)
+
+
+def list_farms() -> list[dict[str, Any]]:
+    with closing(_connect()) as conn:
+        rows = conn.execute("SELECT * FROM farms ORDER BY name ASC").fetchall()
+        return [dict(row) for row in rows]
+
+
+def create_plot(
+    farm_id: int | None,
+    name: str,
+    crop_variety: str = "",
+    planting_date: str = "",
+    soil_type: str = "",
+    irrigation_type: str = "",
+    health_status: str = "Healthy",
+    latitude: float | None = None,
+    longitude: float | None = None,
+) -> int:
+    clean_name = name.strip()
+    if not clean_name:
+        raise ValueError("Plot name cannot be empty.")
+    now = datetime.now(timezone.utc).isoformat()
+    with closing(_connect()) as conn:
+        with conn:
+            cursor = conn.execute(
+                """
+                INSERT INTO plots (
+                    farm_id, name, crop_variety, planting_date, soil_type,
+                    irrigation_type, health_status, latitude, longitude, created_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    farm_id,
+                    clean_name,
+                    crop_variety.strip(),
+                    planting_date.strip(),
+                    soil_type.strip(),
+                    irrigation_type.strip(),
+                    health_status.strip(),
+                    latitude,
+                    longitude,
+                    now,
+                ),
+            )
+            return int(cursor.lastrowid)
+
+
+def list_plots(farm_id: int | None = None) -> list[dict[str, Any]]:
+    with closing(_connect()) as conn:
+        if farm_id is not None:
+            rows = conn.execute("SELECT * FROM plots WHERE farm_id = ? ORDER BY name ASC", (farm_id,)).fetchall()
+        else:
+            rows = conn.execute("SELECT * FROM plots ORDER BY name ASC").fetchall()
+        return [dict(row) for row in rows]
+
+
+def update_plot_status(plot_id: int, health_status: str) -> None:
+    valid_statuses = {"Healthy", "Monitored", "Infected", "Recovering"}
+    clean_status = health_status.strip().title()
+    if clean_status not in valid_statuses:
+        clean_status = "Monitored"
+    with closing(_connect()) as conn:
+        with conn:
+            conn.execute("UPDATE plots SET health_status = ? WHERE id = ?", (clean_status, plot_id))
+
+
+# -------------------------------------------------------------------------
+# Batch Image Analysis History
+# -------------------------------------------------------------------------
+
+def log_batch_scan(
+    batch_name: str,
+    total_images: int,
+    healthy_count: int,
+    diseased_count: int,
+    results: list[dict[str, Any]],
+) -> int:
+    now = datetime.now(timezone.utc).isoformat()
+    with closing(_connect()) as conn:
+        with conn:
+            cursor = conn.execute(
+                """
+                INSERT INTO batch_scans (
+                    batch_name, total_images, healthy_count, diseased_count, results_json, created_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    batch_name.strip() or f"Batch_{now[:10]}",
+                    total_images,
+                    healthy_count,
+                    diseased_count,
+                    json.dumps(results),
+                    now,
+                ),
+            )
+            return int(cursor.lastrowid)
+
+
+def list_batch_scans(limit: int = 25) -> list[dict[str, Any]]:
+    with closing(_connect()) as conn:
+        rows = conn.execute(
+            "SELECT * FROM batch_scans ORDER BY id DESC LIMIT ?",
+            (max(1, int(limit)),),
+        ).fetchall()
+        parsed = []
+        for row in rows:
+            item = dict(row)
+            try:
+                item["results"] = json.loads(item["results_json"])
+            except Exception:
+                item["results"] = []
+            parsed.append(item)
+        return parsed
+
+
+# -------------------------------------------------------------------------
+# Expert Verification Center
+# -------------------------------------------------------------------------
+
+def create_expert_review(
+    prediction_id: int | None,
+    plant_id: int | None,
+    agronomist_name: str,
+    status: str,
+    expert_notes: str,
+    recommended_action: str = "",
+) -> int:
+    now = datetime.now(timezone.utc).isoformat()
+    clean_name = agronomist_name.strip()
+    if not clean_name:
+        raise ValueError("Agronomist name is required.")
+    with closing(_connect()) as conn:
+        with conn:
+            cursor = conn.execute(
+                """
+                INSERT INTO expert_reviews (
+                    prediction_id, plant_id, agronomist_name, status,
+                    expert_notes, recommended_action, created_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    prediction_id,
+                    plant_id,
+                    clean_name,
+                    status.strip() or "Verified",
+                    expert_notes.strip(),
+                    recommended_action.strip(),
+                    now,
+                ),
+            )
+            return int(cursor.lastrowid)
+
+
+def list_expert_reviews() -> list[dict[str, Any]]:
+    with closing(_connect()) as conn:
+        rows = conn.execute("SELECT * FROM expert_reviews ORDER BY id DESC").fetchall()
+        return [dict(row) for row in rows]
+
+
+get_recent_batch_scans = list_batch_scans
+
+

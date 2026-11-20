@@ -7,9 +7,9 @@ from typing import Any, Tuple
 
 import numpy as np
 from PIL import Image, UnidentifiedImageError
-import tensorflow as tf
 
 from .config import ALLOWED_EXTENSIONS, DEFAULT_IMAGE_SIZE, MAX_IMAGE_PIXELS, MAX_UPLOAD_SIZE_MB
+import tensorflow as tf
 
 LOGGER = logging.getLogger(__name__)
 

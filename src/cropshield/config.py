@@ -1,13 +1,25 @@
 import os
 from pathlib import Path
+import tempfile
 
 ROOT_DIR = Path(__file__).resolve().parents[2]
+
+# Ensure KERAS_HOME points to a writable local directory before tensorflow is loaded
+if "KERAS_HOME" not in os.environ:
+    _keras_dir = ROOT_DIR / ".keras"
+    try:
+        _keras_dir.mkdir(parents=True, exist_ok=True)
+        os.environ["KERAS_HOME"] = str(_keras_dir)
+    except OSError:
+        os.environ["KERAS_HOME"] = os.path.join(tempfile.gettempdir(), ".keras")
+
 DATA_DIR = ROOT_DIR / "data"
 MODELS_DIR = ROOT_DIR / "models"
 ARTIFACTS_DIR = ROOT_DIR / "artifacts"
 REPORTS_DIR = ROOT_DIR / "reports"
 DOCS_DIR = ROOT_DIR / "docs"
 DETECTION_THRESHOLDS_PATH = DATA_DIR / "detection_thresholds.json"
+DB_PATH = ROOT_DIR / "crop_history.db"
 
 MODEL_PATH = MODELS_DIR / "crop_model.keras"
 TFLITE_MODEL_PATH = MODELS_DIR / "crop_model.tflite"

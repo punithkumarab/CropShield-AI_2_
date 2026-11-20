@@ -3,9 +3,11 @@ from __future__ import annotations
 from typing import Any, Dict, Optional
 
 import numpy as np
-import tensorflow as tf
-import cv2
 from PIL import Image
+import cv2
+
+from .config import DEFAULT_IMAGE_SIZE, MODEL_PATH
+import tensorflow as tf
 
 from .model import load_model
 from .preprocessing import preprocess_for_model

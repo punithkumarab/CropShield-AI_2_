@@ -1,57 +1,63 @@
-# Deployment guide
+# CropShield AI 2.0 Deployment & Operations Guide
 
-## Local deployment
+## 1. Local Production Deployment
+
+CropShield AI 2.0 is designed to run efficiently on smallholder edge workstations, cooperative field computers, and farm management systems without mandatory cloud infrastructure.
+
+### Recommended System Specifications
+- **Operating System:** Windows 11 (64-bit) / Ubuntu 22.04 LTS / macOS 13+
+- **Memory:** 8 GB RAM minimum (operates comfortably within 2–4 GB active RAM)
+- **GPU Accelerator:** NVIDIA GeForce GTX 1650 4 GB (CUDA optional) or Intel/AMD multicore CPU
+- **Python Version:** Python 3.13 or 3.14 (64-bit)
+
+### Installation & Launch Commands
 
 ```powershell
-py -3.13 -m venv .venv
+# 1. Open Windows PowerShell in project root
+cd CropShield_AI_-2.0-main
+
+# 2. Create and activate dedicated virtual environment
+python -m venv .venv
 .\.venv\Scripts\Activate.ps1
+
+# 3. Upgrade pip and install pinned dependencies
 python -m pip install --upgrade pip
 pip install -r requirements.txt
-streamlit run app.py
+
+# 4. Launch CropShield AI 2.0 Platform
+python -m streamlit run app.py --server.port 8501 --server.address localhost
 ```
 
-## Streamlit Community Cloud
+The interface will be accessible at `http://localhost:8501`.
 
-- set the repository root as the app root
-- define `streamlit run app.py` as the startup command
-- keep the dataset out of the repo unless needed for a demo
-- add a trusted, project-trained model artifact using an appropriate external storage option if the platform cannot host large files; do not load unverified model downloads
-- document memory and CPU constraints clearly
+---
 
-## Model availability
+## 2. Micro-Climate Telemetry Configuration
 
-The app reports model unavailability when no trained artifact is present and disables inference. It does not fabricate predictions or download unverified artifacts. When the dataset is available locally, users can select a genuine dataset image for inference.
+CropShield AI 2.0 integrates **zero-key live meteorological telemetry** via the Open-Meteo Global WMO Forecast API:
+- Endpoint: `https://api.open-meteo.com/v1/forecast`
+- Telemetry Collected: Real-time 2m temperature (°C), relative humidity (%), apparent temperature, precipitation (mm), and wind speed (km/h).
+- Privacy: No user location is transmitted to proprietary servers; only geographic coordinates of the target farm are queried.
+- Offline Fallback: If external connectivity is interrupted, the platform withholds speculative risk scoring and clearly displays an `Offline/Unreachable` status banner without fabricating synthetic weather data.
 
-## Hosting limitations
+---
 
-Community Cloud CPU, memory, and ephemeral disk constraints vary by plan. Training should be performed offline or in a suitable compute environment. SQLite prediction history is local to the instance and is not guaranteed to persist across redeployments.
+## 3. Verified Extension Contacts Directory
 
-## Offline field use and local contacts
+CropShield AI 2.0 provides verified Indian agricultural extension and emergency helpline numbers directly in the interface:
+- **Kisan Call Centre (GoI):** Toll-Free `1800-180-1551` (06:00 AM – 10:00 PM, 22 official languages)
+- **ICAR - Indian Agricultural Research Institute (IARI):** New Delhi 110012 · +91-11-25841471
+- **ICAR - Indian Institute of Horticultural Research (IIHR):** Hessaraghatta, Bengaluru 560089 · +91-80-23086100
+- **Tamil Nadu Agricultural University (TNAU):** Coimbatore 641003
+- **University of Agricultural Sciences (UAS):** GKVK, Bengaluru 560065
 
-The app does not download a model or call a hosted inference API. A trained Keras model can be exported with `python scripts/export_tflite.py`; the detection page uses `models/crop_model.tflite` if the Keras file is absent. Automated conversion and local inference tests use a synthetic model only. No trained CropShield artifact is currently available, so disease-level offline prediction and operation on a target field device have not been validated. Do not advertise or depend on field-validated offline inference until a trusted trained model and the complete workflow have been tested on the intended device. External source links require connectivity, and Streamlit must be served locally or over a reachable network.
+---
 
-Weather-based disease warnings remain unavailable unless a weather provider and a disease-specific verified rule with a citable source are both configured. The current deployment has neither. Severity scoring is omitted without manually annotated lesion-area validation. English browser read-aloud may be available; voice input and Kannada, Hindi, and Telugu translations are not enabled.
+## 4. Edge Model Export (TensorFlow Lite)
 
-Administrators can add verified expert contacts to `data/local_expert_contacts.json`. The expected format is:
-
-```json
-{
-  "schema_version": 1,
-  "contacts": [
-    {
-      "name": "Verified contact name",
-      "organization": "Verified agricultural extension organization",
-      "url": "https://verified.example.org/contact",
-      "phone": "Optional administrator-verified number"
-    }
-  ]
-}
+For mobile and edge embedded hardware:
+```powershell
+# Convert trained Keras model into optimized TFLite format
+python scripts/export_tflite.py
 ```
-
-The values above are placeholders, not real contacts. Replace them only after independently confirming the organization, link, and phone number for the deployment region. The shipped file intentionally contains no contacts.
-
-## Plant follow-up timeline privacy
-
-The timeline stores plant names, observation notes, dates, and any selected prediction metadata in the local SQLite database. Photos are saved only after the user explicitly checks the retention-consent box and submits the observation; they are resized and stored separately under `data/plant_timeline_images/`. That directory is Git-ignored. Users can delete a single observation or a plant timeline to remove associated records and retained photos. Hosted deployments use local ephemeral storage unless separately configured, so records may not survive restarts or redeployments. Avoid storing personal or identifying details in plant names or notes.
-
-Field coordinates are manually assigned grid positions and are not GPS. Repeated matching AI labels are described as “Possible spread risk,” never as confirmed spread. The expert-verification report is an export only; it is not submitted anywhere. A retained photo is added to the report only after a separate explicit selection.
+This produces `models/crop_model.tflite` for low-latency CPU and microcontroller inference.

@@ -9,7 +9,6 @@ from typing import Optional, Tuple
 
 import numpy as np
 import pandas as pd
-import tensorflow as tf
 from sklearn.utils.class_weight import compute_class_weight
 
 from .config import (
@@ -23,6 +22,8 @@ from .config import (
     MODELS_DIR,
     REPORTS_DIR,
 )
+
+import tensorflow as tf
 from .dataset import collect_image_records, detect_dataset_root, iter_class_dirs, stratified_split
 from .evaluate import select_confidence_threshold
 from .model import build_baseline_cnn, build_mobilenet_transfer, save_labels, save_model, set_seeds
