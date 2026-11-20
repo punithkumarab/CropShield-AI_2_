@@ -2,6 +2,8 @@
 
 **CropShield AI 2.0** is an enterprise-grade agricultural decision support, crop health surveillance, and computer vision diagnostic platform. Built specifically for resource-constrained edge environments, agricultural cooperatives, agronomists, and smallholder farmers, CropShield AI 2.0 pairs high-throughput deep learning classification with zero-cloud spatial field management and verified extension decision intelligence.
 
+> 🚀 **Local App URL**: [http://localhost:8501](http://localhost:8501) (Open in browser after running `streamlit run app.py`)
+
 ---
 
 ## 🌾 Platform Architecture & Core Workflow
@@ -118,8 +120,8 @@ In accordance with modern UI/UX principles (inspired by *Impeccable*, *Hallmark*
 
 ```powershell
 # 1. Clone repository
-git clone https://github.com/CropShield/CropShield_AI.git
-cd CropShield_AI_-2.0-main
+git clone https://github.com/punithkumar0927-ctrl/CropShield-AI_2_.git
+cd CropShield-AI_2_
 
 # 2. Create and activate virtual environment
 python -m venv .venv
@@ -132,7 +134,8 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
-The application will start on `http://localhost:8501`.
+The application will start immediately. Open the interactive platform in your browser at:
+👉 **[http://localhost:8501](http://localhost:8501)**
 
 ---
 
