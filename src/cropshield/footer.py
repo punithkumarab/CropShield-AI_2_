@@ -7,7 +7,7 @@ from src.cropshield.ui import inject_theme, render_language_selector
 _FOOTER_HTML = """
 <div style="margin-top:3rem;padding-top:2rem;border-top:1px solid #E2E8F0;text-align:center;">
     <div style="display:flex;justify-content:center;gap:36px;margin-bottom:1.25rem;">
-        <a href="https://github.com/punithkumar0927-ctrl" target="_blank" style="color:#1B4332;font-size:0.88rem;font-weight:700;text-decoration:none;letter-spacing:0.04em;">GitHub &nearr;</a>
+        <a href="https://github.com/punithkumarab" target="_blank" style="color:#1B4332;font-size:0.88rem;font-weight:700;text-decoration:none;letter-spacing:0.04em;">GitHub &nearr;</a>
         <a href="https://icar.org.in" target="_blank" style="color:#1B4332;font-size:0.88rem;font-weight:700;text-decoration:none;letter-spacing:0.04em;">ICAR Portal &nearr;</a>
         <a href="https://kvk.icar.gov.in" target="_blank" style="color:#1B4332;font-size:0.88rem;font-weight:700;text-decoration:none;letter-spacing:0.04em;">KVK Helplines &nearr;</a>
         <a href="https://open-meteo.com" target="_blank" style="color:#1B4332;font-size:0.88rem;font-weight:700;text-decoration:none;letter-spacing:0.04em;">Open-Meteo API &nearr;</a>
@@ -20,7 +20,7 @@ _FOOTER_HTML = """
     <p style="margin-bottom:0.25rem;">
         <a href="mailto:punithkumar0927@gmail.com" style="color:#2D6A4F;text-decoration:none;font-weight:600;">&#9993; punithkumar0927@gmail.com</a>
         &nbsp;&nbsp;|&nbsp;&nbsp;
-        <a href="https://github.com/punithkumar0927-ctrl" target="_blank" style="color:#2D6A4F;text-decoration:none;font-weight:600;">&#128736; GitHub Repository</a>
+        <a href="https://github.com/punithkumarab" target="_blank" style="color:#2D6A4F;text-decoration:none;font-weight:600;">&#128736; GitHub Repository</a>
     </p>
     <p style="color:#64748B;font-size:0.8rem;margin-top:0.5rem;">CropShield AI 2.0 &mdash; Autonomous Precision Plant-Health Intelligence for Indian Agriculture.</p>
 </div>

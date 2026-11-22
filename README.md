@@ -120,7 +120,7 @@ In accordance with modern UI/UX principles (inspired by *Impeccable*, *Hallmark*
 
 ```powershell
 # 1. Clone repository
-git clone https://github.com/punithkumar0927-ctrl/CropShield-AI_2_.git
+git clone https://github.com/punithkumarab/CropShield-AI_2_.git
 cd CropShield-AI_2_
 
 # 2. Create and activate virtual environment
