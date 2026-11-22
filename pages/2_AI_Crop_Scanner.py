@@ -8,6 +8,7 @@ import logging
 from pathlib import Path
 import time
 
+import cv2
 import numpy as np
 import pandas as pd
 import plotly.express as px
@@ -242,9 +243,19 @@ if image_available:
                 if explanation.get("status") == "ok":
                     mask = quality.leaf_mask
                     heatmap = explanation["heatmap"]
-                    h_total = float(np.sum(heatmap))
-                    if h_total > 0 and np.any(mask):
-                        heatmap_leaf_focus = float(np.sum(heatmap[mask]) / h_total)
+                    if mask is not None and heatmap is not None:
+                        if mask.shape != heatmap.shape:
+                            mask = (
+                                cv2.resize(
+                                    mask.astype(np.uint8),
+                                    (heatmap.shape[1], heatmap.shape[0]),
+                                    interpolation=cv2.INTER_NEAREST,
+                                )
+                                > 0
+                            )
+                        h_total = float(np.sum(heatmap))
+                        if h_total > 0 and np.any(mask):
+                            heatmap_leaf_focus = float(np.sum(heatmap[mask]) / h_total)
 
             # Trust Assessment
             trust = assess_trust(

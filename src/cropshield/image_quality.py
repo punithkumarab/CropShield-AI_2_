@@ -75,8 +75,9 @@ def assess_image_quality(image: Image.Image) -> ImageQualityAssessment:
     """Assess capture quality and estimate green leaf-like regions, not leaf identity."""
     rgb = image.convert("RGB")
     width, height = rgb.size
-    rgb.thumbnail((512, 512), Image.Resampling.BILINEAR)
-    pixels = np.asarray(rgb, dtype=np.float32)
+    rgb_thumb = rgb.copy()
+    rgb_thumb.thumbnail((512, 512), Image.Resampling.BILINEAR)
+    pixels = np.asarray(rgb_thumb, dtype=np.float32)
     red, green, blue = (pixels[:, :, channel] for channel in range(3))
     luminance = 0.2126 * red + 0.7152 * green + 0.0722 * blue
     brightness = float(np.mean(luminance))
@@ -98,7 +99,7 @@ def assess_image_quality(image: Image.Image) -> ImageQualityAssessment:
     minimum = np.min(pixels, axis=2)
     glare_fraction = float(np.mean((luminance >= 245) & ((maximum - minimum) <= 18)))
     green_pixel_fraction = float(np.mean((green > red * 1.05) & (green > blue * 0.85)))
-    leaf_mask, leaf_coverage_fraction, leaf_contour_count, _bounding_box = segment_leaf_like_regions(rgb)
+    leaf_mask, leaf_coverage_fraction, leaf_contour_count, _bounding_box = segment_leaf_like_regions(image)
 
     feedback: list[str] = []
     if min(width, height) < MIN_IMAGE_DIMENSION:

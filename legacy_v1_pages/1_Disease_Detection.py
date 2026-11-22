@@ -7,6 +7,7 @@ from pathlib import Path
 import sqlite3
 import time
 
+import cv2
 import numpy as np
 import pandas as pd
 import plotly.express as px
@@ -421,9 +422,19 @@ if image_available and st.button(
                 if explanation["status"] == "ok":
                     mask = quality_assessment.leaf_mask
                     heatmap = explanation["heatmap"]
-                    heatmap_total = float(np.sum(heatmap))
-                    if heatmap_total > 0 and np.any(mask):
-                        heatmap_leaf_focus = float(np.sum(heatmap[mask]) / heatmap_total)
+                    if mask is not None and heatmap is not None:
+                        if mask.shape != heatmap.shape:
+                            mask = (
+                                cv2.resize(
+                                    mask.astype(np.uint8),
+                                    (heatmap.shape[1], heatmap.shape[0]),
+                                    interpolation=cv2.INTER_NEAREST,
+                                )
+                                > 0
+                            )
+                        heatmap_total = float(np.sum(heatmap))
+                        if heatmap_total > 0 and np.any(mask):
+                            heatmap_leaf_focus = float(np.sum(heatmap[mask]) / heatmap_total)
                 else:
                     st.info(
                         "Explainability heatmap is not available for this model architecture. "
