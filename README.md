@@ -137,6 +137,16 @@ streamlit run app.py
 The application will start immediately. Open the interactive platform in your browser at:
 👉 **[http://localhost:8501](http://localhost:8501)**
 
+### ☁️ Cloud Deployment (Render)
+
+CropShield AI 2.0 includes automated Render deployment configuration (`render.yaml` & `Procfile`):
+
+1. Go to [Render Dashboard](https://dashboard.render.com/) and create a new **Web Service** connected to this repository.
+2. Settings:
+   - **Build Command:** `pip install -r requirements.txt`
+   - **Start Command:** `streamlit run app.py --server.port $PORT --server.address 0.0.0.0`
+3. Render automatically provisions the port (`$PORT`) and serves the application at your public URL (e.g., `https://cropshield-ai-2.onrender.com`).
+
 ---
 
 ## 🧪 Comprehensive Verification & QA

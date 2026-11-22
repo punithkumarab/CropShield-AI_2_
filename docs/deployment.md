@@ -61,3 +61,18 @@ For mobile and edge embedded hardware:
 python scripts/export_tflite.py
 ```
 This produces `models/crop_model.tflite` for low-latency CPU and microcontroller inference.
+
+---
+
+## 5. Render Cloud Web Service Deployment
+
+To deploy CropShield AI 2.0 to Render:
+
+1. **Connect GitHub Repository:** Connect `punithkumarab/CropShield-AI_2_` as a Web Service.
+2. **Environment & Runtime:**
+   - **Runtime:** `Python 3` (uses `.python-version` 3.13.18)
+   - **Build Command:** `pip install -r requirements.txt`
+   - **Start Command:** `streamlit run app.py --server.port $PORT --server.address 0.0.0.0`
+3. **Automated Configuration:** The repository provides `render.yaml` and `Procfile` configured to bind to Render's dynamic `$PORT` and `0.0.0.0` interface.
+4. **Accessing the Deployed App:** Render provisions an online URL (e.g., `https://cropshield-ai-2-xxxx.onrender.com`).
+
